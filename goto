@@ -30,7 +30,7 @@ print_help() {
     printf "${CYAN}Usage:${RESET}\n"
     printf "  ${BULLET} ${YELLOW}goto <name>${RESET}            - Echo the path of the shortcut (used by shell wrapper to cd)\n"
     printf "  ${BULLET} ${YELLOW}goto -r <name> <path>${RESET}  - Register or update a shortcut\n"
-    printf "  ${BULLET} ${YELLOW}goto -d <name>${RESET}         - Delete a shortcut\n"
+    printf "  ${BULLET} ${YELLOW}goto -d <name>${RESET}         - Delete a shortcut (alias: -u)\n"
     printf "  ${BULLET} ${YELLOW}goto -l${RESET}                - List all shortcuts\n"
     printf "  ${BULLET} ${YELLOW}goto -h${RESET}                - Show this help message\n"
 }
@@ -54,9 +54,18 @@ register_shortcut() {
     name=$1
     path=$2
     validate_name "$name"
+    # Resolve absolute path
+    if command -v realpath >/dev/null 2>&1; then
+        path=$(realpath "$path")
+    else
+        # Fallback if realpath is missing (less robust but better than nothing)
+        if [ -d "$path" ]; then
+            path=$(cd "$path" && pwd)
+        fi
+    fi
+
     ensure_config_file
 
-    eval path="$path"  # Expand ~
     grep -v "^${name}|" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" 2>/dev/null
     mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
     printf "%s|%s\n" "$name" "$path" >> "$CONFIG_FILE"
@@ -69,7 +78,8 @@ delete_shortcut() {
     ensure_config_file
 
     if grep -q "^${name}|" "$CONFIG_FILE"; then
-        grep -v "^${name}|" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp" && mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+        grep -v "^${name}|" "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+        mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
         printf "${RED}${CROSS} Deleted:${RESET} Shortcut '${YELLOW}%s${RESET}' removed.\n" "$name"
     else
         printf "${RED}Shortcut '${name}' not found.${RESET}\n"
@@ -96,8 +106,8 @@ list_shortcuts() {
             status=" (missing)"
         fi
 
-        # Print plain output
-        printf "  %-15s → %s%s\n" "$name" "$path" "$status"
+        # Print output
+        printf "  ${YELLOW}%-15s${RESET} → ${CYAN}%s${RESET}%s\n" "$name" "$path" "$status"
     done < "$CONFIG_FILE"
 
     printf "\n"
@@ -136,7 +146,7 @@ case "$1" in
         fi
         register_shortcut "$2" "$3"
         ;;
-    -d)
+    -d|-u)
         if [ $# -ne 2 ]; then
             printf "${RED}Usage:${RESET} goto -d <name>\n"
             exit 1

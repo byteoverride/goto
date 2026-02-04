@@ -18,92 +18,54 @@
 
 ## 🔧 Installation
 
-### 1. Clone the repo
+### 1. Clone & Install
 
 ```bash
 git clone https://github.com/byteoverride/goto.git
 cd goto
+./install.sh
 ```
+
+### 2. Update Shell Config
+
+Add the following to your `~/.bashrc` or `~/.zshrc`:
 
 ```bash
-mkdir -p ~/.local/bin
-cp goto ~/.local/bin/
-chmod +x ~/.local/bin/goto
+source ~/.local/bin/goto.sh
 ```
 
-## Add the Shell function to your shell Config
-###For bash (~/.bashrc)
+Restart your shell or run `source ~/.bashrc` (or `~/.zshrc`).
 
-```bash
-goto() {
-    if [ "$1" = "-r" ] || [ "$1" = "-l" ] || [ "$1" = "-h" ] || [ "$1" = "-d" ]; then
-        command goto "$@"
-    else
-        local result
-        result=$(command goto "$1" 2>/dev/null)
-        if [ -d "$result" ]; then
-            cd "$result"
-        else
-            echo "$result"
-            return 1
-        fi
-    fi
-}
-_goto_complete() {
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    COMPREPLY=( $(cut -d'|' -f1 "$HOME/.config/goto/config" | grep -i "^$cur") )
-}
-complete -F _goto_complete goto
+---
 
-```
-
-### For Zsh (~/.zshrc)
-
-```bash
-goto() {
-    if [ "$1" = "-r" ] || [ "$1" = "-l" ] || [ "$1" = "-h" ] || [ "$1" = "-d" ]; then
-        command goto "$@"
-    else
-        local result
-        result=$(command goto "$1" 2>/dev/null)
-        if [ -d "$result" ]; then
-            cd "$result"
-        else
-            echo "$result"
-            return 1
-        fi
-    fi
-}
-_goto_complete() {
-  local expl
-  local shortcuts
-  shortcuts=(${(f)"$(cut -d'|' -f1 ~/.config/goto/config 2>/dev/null)"})
-  _describe -t shortcuts 'goto shortcuts' shortcuts
-}
-compdef _goto_complete goto
-```
 ## Usage 
+
 ### Register a Directory
 ```bash
-goto -r <shortcut_name> <Directory>
+# Register current directory as 'work'
+goto -r work .
 
-goto -r Tools /home/username/Documents/tools
-
+# Register specific path
+goto -r tools /home/username/Documents/tools
 ```
-![image](https://github.com/user-attachments/assets/c27d05d7-4ffe-4739-8a70-20129641fe04)
+> **Note:** `goto` automatically resolves paths to their absolute location, so you can safely register relative paths like `.` or `..`.
 
 ### List Registered Directories 
 ```bash
 goto -l
 ```
-![image](https://github.com/user-attachments/assets/f9f7a172-1dd7-454a-be0e-f2ba831778e6)
 
 ### Use the shortcut
 ```bash
-goto <shortcut_name>
-goto Tools
+goto work
 ```
-![image](https://github.com/user-attachments/assets/b487e943-a397-4ffa-aa05-f9b2d06d42dd)
+
+### Remove a shortcut
+```bash
+goto -d work
+# OR
+goto -u work
+```
 
 
 
