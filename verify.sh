@@ -2,6 +2,10 @@
 # goto - Test suite (TAP-compatible output)
 # Run: ./verify.sh
 
+# Force POSIX sh emulation if running under zsh
+# shellcheck disable=SC2292
+[ -n "$ZSH_VERSION" ] && emulate sh
+
 # No set -e — tests handle errors individually, and set -e behaves
 # inconsistently across shells (zsh EXIT traps lose PATH).
 

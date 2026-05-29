@@ -27,15 +27,23 @@ jobs:
         include:
           - os: ubuntu-latest
             shell: dash
-          - os: ubuntu-latest
-            shell: zsh
     steps:
       - uses: actions/checkout@v4
       - name: Install shells
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y dash zsh
+        if: matrix.os == 'ubuntu-latest' && matrix.shell == 'dash'
+        run: sudo apt-get update && sudo apt-get install -y dash
       - name: Run tests
         run: ${{ matrix.shell }} verify.sh
+
+  test-zsh:
+    name: Tests (zsh on ubuntu-latest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
+      - name: Run tests under zsh
+        run: zsh verify.sh
 
   install-test:
     name: Install test
