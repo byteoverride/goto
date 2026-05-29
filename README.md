@@ -67,8 +67,7 @@ Fish completions are loaded automatically from the system path.
 ### Arch Linux (AUR)
 
 ```sh
-# Using an AUR helper
-yay -S goto
+yay -S goto-dir
 ```
 
 ### Uninstall
