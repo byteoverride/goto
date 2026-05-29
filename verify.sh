@@ -77,6 +77,8 @@ ORIG_HOME="$HOME"
 TEST_HOME="/tmp/goto_test_$$"
 rm -rf "$TEST_HOME"
 mkdir -p "$TEST_HOME"
+# Resolve symlinks (macOS: /tmp -> /private/tmp) so assertions match realpath output
+TEST_HOME=$(cd "$TEST_HOME" && pwd -P)
 export HOME="$TEST_HOME"
 export XDG_CONFIG_HOME="$TEST_HOME/.config"
 
