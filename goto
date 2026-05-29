@@ -25,7 +25,8 @@ if [ -t 1 ]; then
     CROSS="❌"
     BULLET="🔹"
 else
-    GREEN="" RED="" YELLOW="" BLUE="" CYAN="" RESET="" # shellcheck disable=SC2034
+    # shellcheck disable=SC2034
+    GREEN="" RED="" YELLOW="" BLUE="" CYAN="" RESET=""
     CHECK="[ok]"
     CROSS="[!!]"
     BULLET="*"

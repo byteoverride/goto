@@ -48,6 +48,7 @@ assert_contains() {
 # ── Setup ───────────────────────────────────────────────────────
 
 ORIG_HOME="$HOME"
+ORIG_PATH="$PATH"
 TEST_HOME="/tmp/goto_test_$$"
 rm -rf "$TEST_HOME"
 mkdir -p "$TEST_HOME"
@@ -55,6 +56,8 @@ mkdir -p "$TEST_HOME"
 TEST_HOME=$(cd "$TEST_HOME" && pwd -P)
 export HOME="$TEST_HOME"
 export XDG_CONFIG_HOME="$TEST_HOME/.config"
+# Preserve PATH — zsh re-reads startup files on HOME change and may lose it
+export PATH="$ORIG_PATH"
 
 GOTO_BIN="$(cd "$(dirname "$0")" && pwd)/goto"
 
@@ -62,7 +65,8 @@ GOTO_BIN="$(cd "$(dirname "$0")" && pwd)/goto"
 cleanup() {
     rm -rf "$TEST_HOME"
     HOME="$ORIG_HOME"
-    export HOME
+    PATH="$ORIG_PATH"
+    export HOME PATH
     unset XDG_CONFIG_HOME
 }
 trap cleanup EXIT
@@ -93,9 +97,9 @@ fi
 
 # 2. Register with relative path (.)
 old_pwd=$(pwd)
-cd "$TEST_DIR_2"
+cd "$TEST_DIR_2" || exit 1
 $GOTO_BIN -r rel_test . >/dev/null 2>&1
-cd "$old_pwd"
+cd "$old_pwd" || exit 1
 if grep -q "^rel_test|${TEST_DIR_2}$" "$XDG_CONFIG_HOME/goto/config"; then
     pass "Register with relative path (.)"
 else
@@ -103,9 +107,9 @@ else
 fi
 
 # 3. Register current directory (no path argument)
-cd "$TEST_DIR_1"
+cd "$TEST_DIR_1" || exit 1
 $GOTO_BIN -r curdir_test >/dev/null 2>&1
-cd "$old_pwd"
+cd "$old_pwd" || exit 1
 if grep -q "^curdir_test|${TEST_DIR_1}$" "$XDG_CONFIG_HOME/goto/config"; then
     pass "Register current dir (no path argument)"
 else
