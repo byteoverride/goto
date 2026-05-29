@@ -1,0 +1,36 @@
+#compdef goto
+# goto - Zsh completion
+# Installed to /usr/share/zsh/vendor-completions/_goto by make install
+
+_goto() {
+    local config="${XDG_CONFIG_HOME:-$HOME/.config}/goto/config"
+    [ -f "$config" ] || return
+
+    local input="${words[2]}"
+    case "$input" in
+        */*)
+            local name="${input%%/*}"
+            local subpath="${input#*/}"
+            local base
+            base=$(grep "^${name}|" "$config" | head -1 | cut -d'|' -f2-)
+            if [ -n "$base" ] && [ -d "$base" ]; then
+                local -a subdirs
+                local dir
+                for dir in "${base}/${subpath}"*/; do
+                    [ -d "$dir" ] || continue
+                    local relative="${dir#"${base}/"}"
+                    relative="${relative%/}"
+                    subdirs+=("${name}/${relative}")
+                done
+                compadd -S '/' -q -- "${subdirs[@]}"
+            fi
+            ;;
+        *)
+            local -a shortcuts
+            shortcuts=(${(f)"$(cut -d'|' -f1 "$config" 2>/dev/null)"})
+            _describe -t shortcuts 'goto shortcuts' shortcuts
+            ;;
+    esac
+}
+
+_goto "$@"

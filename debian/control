@@ -1,0 +1,21 @@
+Source: goto
+Section: utils
+Priority: optional
+Maintainer: Psalms Christopher Matovu <psalmschristophermatovu@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/byteoverride/goto
+Vcs-Browser: https://github.com/byteoverride/goto
+Vcs-Git: https://github.com/byteoverride/goto.git
+Rules-Requires-Root: no
+
+Package: goto
+Architecture: all
+Depends: ${misc:Depends}, coreutils
+Recommends: bash-completion
+Description: lightweight directory shortcut manager for POSIX shells
+ goto is a directory bookmark manager that lets you register named
+ shortcuts to directories and jump to them with tab completion.
+ .
+ Features include subpath navigation, shortcut cleanup, import/export,
+ and shell integration for Bash, Zsh, and Fish.

@@ -1,0 +1,180 @@
+.TH GOTO 1 "2025-05-29" "goto 1.0.0" "User Commands"
+.SH NAME
+goto \- directory shortcut manager
+.SH SYNOPSIS
+.B goto
+.RI [ options ]
+.RI [ name [ /subpath ]]
+.SH DESCRIPTION
+.B goto
+is a lightweight, POSIX\-compatible directory bookmark manager.
+It lets you register named shortcuts to directories and instantly
+jump to them with tab completion.
+.PP
+When invoked with a shortcut name,
+.B goto
+resolves the stored path and changes to that directory.
+An optional subpath after the shortcut name navigates to a
+subdirectory of the bookmarked location.
+.PP
+Shortcuts are stored in a plain\-text configuration file using a
+simple pipe\-delimited format (name|path), one per line.
+.SH OPTIONS
+.TP
+.BR \-r " " \fIname\fR " [" \fIpath\fR "]"
+Register or update a shortcut.
+If
+.I path
+is omitted, the current working directory is used.
+Relative paths are automatically resolved to absolute paths.
+.TP
+.BR \-d " " \fIname\fR ", " \-u " " \fIname\fR
+Delete a shortcut.
+.TP
+.BR \-R " " \fIold\fR " " \fInew\fR
+Rename a shortcut from
+.I old
+to
+.IR new .
+Fails if
+.I new
+already exists.
+.TP
+.BR \-l ", " \-\-list
+List all registered shortcuts.
+Shortcuts pointing to nonexistent directories are marked as
+.BR (missing) .
+.TP
+.BR \-c ", " \-\-cleanup
+Remove all shortcuts whose target directories no longer exist.
+.TP
+.B \-\-export
+Print all shortcuts to standard output in the config file format.
+Useful for backing up or transferring shortcuts between machines.
+.TP
+.BI \-\-import " file"
+Import shortcuts from
+.IR file .
+Entries with duplicate names overwrite existing shortcuts.
+Invalid entries are skipped.
+.TP
+.BR \-h ", " \-\-help
+Display a help message and exit.
+.TP
+.BR \-V ", " \-\-version
+Display the version number and exit.
+.SH SHELL INTEGRATION
+The
+.B goto
+binary outputs paths to standard output.
+To enable the
+.BR cd \-on\-resolve
+behavior and tab completion, source the appropriate shell
+integration file in your startup configuration:
+.SS Bash and Zsh
+.PP
+Add to
+.I ~/.bashrc
+or
+.IR ~/.zshrc :
+.PP
+.RS
+.nf
+source /usr/share/goto/goto.sh
+.fi
+.RE
+.SS Fish
+.PP
+Install
+.I goto.fish
+to your Fish functions directory:
+.PP
+.RS
+.nf
+cp /usr/share/fish/vendor_completions.d/goto.fish \\
+   ~/.config/fish/functions/goto.fish
+.fi
+.RE
+.PP
+Or, if installed via a package manager, Fish integration is
+loaded automatically.
+.SH SUBPATH NAVIGATION
+A shortcut name can include a subpath separated by a forward slash:
+.PP
+.RS
+.nf
+goto myproject/src/lib
+.fi
+.RE
+.PP
+This resolves the
+.B myproject
+shortcut and appends
+.B src/lib
+to the resulting path.
+Tab completion supports subpath navigation.
+.SH SHORTCUT NAMES
+Shortcut names may contain letters, digits, underscores, and hyphens.
+Names are case\-sensitive.
+.SH FILES
+.TP
+.I ${XDG_CONFIG_HOME:\-$HOME/.config}/goto/config
+Shortcut database.
+Plain\-text file with one entry per line in the format:
+.br
+.I name\fR|\fIpath
+.SH ENVIRONMENT
+.TP
+.B XDG_CONFIG_HOME
+If set, the configuration directory is
+.IR $XDG_CONFIG_HOME/goto/ .
+Defaults to
+.IR $HOME/.config/goto/ .
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Operational error (shortcut not found, path does not exist).
+.TP
+.B 2
+Usage error (invalid arguments, missing required arguments).
+.SH EXAMPLES
+.nf
+# Register the current directory as "work"
+goto \-r work
+
+# Register a specific path
+goto \-r docs /home/user/Documents
+
+# Jump to a shortcut
+goto work
+
+# Jump to a subdirectory of a shortcut
+goto work/src/components
+
+# List all shortcuts
+goto \-l
+
+# Remove broken shortcuts
+goto \-\-cleanup
+
+# Rename a shortcut
+goto \-R work office
+
+# Back up shortcuts to a file
+goto \-\-export > ~/goto\-backup.txt
+
+# Restore shortcuts from a backup
+goto \-\-import ~/goto\-backup.txt
+.fi
+.SH SEE ALSO
+.BR cd (1),
+.BR pushd (1)
+.SH AUTHOR
+Written by Psalms Christopher Matovu.
+.SH REPORTING BUGS
+Report bugs at: https://github.com/byteoverride/goto/issues
+.SH LICENSE
+MIT License. See the LICENSE file in the source distribution.

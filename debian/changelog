@@ -1,0 +1,14 @@
+goto (1.0.0-1) unstable; urgency=medium
+
+  * Initial release.
+  * Register, delete, list, and resolve directory shortcuts.
+  * Subpath navigation (goto name/subpath).
+  * Cleanup command to remove broken shortcuts.
+  * Rename shortcuts.
+  * Import/export shortcuts for backup and migration.
+  * Shell integration for Bash, Zsh, and Fish.
+  * Tab completion with subpath support.
+  * XDG Base Directory compliance.
+  * Man page.
+
+ -- Psalms Christopher Matovu <psalmschristophermatovu@gmail.com>  Thu, 29 May 2025 00:00:00 +0000
