@@ -2,7 +2,8 @@
 # goto - Test suite (TAP-compatible output)
 # Run: ./verify.sh
 
-set -e
+# No set -e — tests handle errors individually, and set -e behaves
+# inconsistently across shells (zsh EXIT traps lose PATH).
 
 # ── Test framework ──────────────────────────────────────────────
 
@@ -36,38 +37,11 @@ assert_eq() {
     fi
 }
 
-assert_exit() {
-    expected_rc="$1"
-    shift
-    desc="$1"
-    shift
-    output=$("$@" 2>&1) || true
-    actual_rc=$?
-    # Re-run to capture actual exit code properly
-    set +e
-    "$@" >/dev/null 2>&1
-    actual_rc=$?
-    set -e
-    if [ "$actual_rc" -eq "$expected_rc" ]; then
-        pass "$desc"
-    else
-        fail "$desc" "exit $expected_rc" "exit $actual_rc"
-    fi
-}
-
 assert_contains() {
     if printf '%s' "$2" | grep -q "$1"; then
         pass "$3"
     else
         fail "$3" "output containing '$1'" "$2"
-    fi
-}
-
-assert_not_contains() {
-    if ! printf '%s' "$2" | grep -q "$1"; then
-        pass "$3"
-    else
-        fail "$3" "output NOT containing '$1'" "$2"
     fi
 }
 
@@ -84,9 +58,11 @@ export XDG_CONFIG_HOME="$TEST_HOME/.config"
 
 GOTO_BIN="$(cd "$(dirname "$0")" && pwd)/goto"
 
+# shellcheck disable=SC2317
 cleanup() {
     rm -rf "$TEST_HOME"
-    export HOME="$ORIG_HOME"
+    HOME="$ORIG_HOME"
+    export HOME
     unset XDG_CONFIG_HOME
 }
 trap cleanup EXIT
@@ -152,10 +128,8 @@ resolved=$($GOTO_BIN space_test 2>/dev/null)
 assert_eq "$TEST_DIR_SPACES" "$resolved" "Register and resolve path with spaces"
 
 # 6. Register with nonexistent path (should fail)
-set +e
 $GOTO_BIN -r bad_test "/nonexistent/path/$$" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Register with nonexistent path fails"
 else
@@ -163,10 +137,8 @@ else
 fi
 
 # 7. Register with empty name (should fail)
-set +e
 $GOTO_BIN -r "" "$TEST_DIR_1" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Register with empty name fails"
 else
@@ -174,10 +146,8 @@ else
 fi
 
 # 8. Register with invalid name characters (should fail)
-set +e
 $GOTO_BIN -r "bad name!" "$TEST_DIR_1" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Register with invalid name (special chars) fails"
 else
@@ -194,10 +164,8 @@ resolved=$($GOTO_BIN resolve_me 2>/dev/null)
 assert_eq "$TEST_DIR_1" "$resolved" "Resolve existing shortcut"
 
 # 10. Resolve nonexistent shortcut (should fail)
-set +e
-output=$($GOTO_BIN nonexistent_shortcut_$$ 2>&1)
+$GOTO_BIN "nonexistent_shortcut_$$" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Resolve nonexistent shortcut fails"
 else
@@ -209,10 +177,8 @@ TEMP_RESOLVE="$TEST_HOME/temp_resolve_dir"
 mkdir -p "$TEMP_RESOLVE"
 $GOTO_BIN -r temp_resolve "$TEMP_RESOLVE" >/dev/null 2>&1
 rmdir "$TEMP_RESOLVE"
-set +e
 $GOTO_BIN temp_resolve >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Resolve shortcut to deleted directory fails"
 else
@@ -229,10 +195,8 @@ resolved=$($GOTO_BIN project/src/lib 2>/dev/null)
 assert_eq "$TEST_HOME/test_project/src/lib" "$resolved" "Subpath navigation (project/src/lib)"
 
 # 13. Subpath to nonexistent subdirectory (should fail)
-set +e
 $GOTO_BIN project/nonexistent/path >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Subpath to nonexistent subdirectory fails"
 else
@@ -262,10 +226,8 @@ else
 fi
 
 # 16. Delete nonexistent shortcut (should fail)
-set +e
-$GOTO_BIN -d nonexistent_$$ >/dev/null 2>&1
+$GOTO_BIN -d "nonexistent_$$" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Delete nonexistent shortcut fails"
 else
@@ -286,10 +248,8 @@ else
 fi
 
 # 18. Rename nonexistent shortcut (should fail)
-set +e
-$GOTO_BIN -R nonexistent_$$ new_name >/dev/null 2>&1
+$GOTO_BIN -R "nonexistent_$$" new_name >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Rename nonexistent shortcut fails"
 else
@@ -299,10 +259,8 @@ fi
 # 19. Rename to existing name (should fail)
 $GOTO_BIN -r rename_a "$TEST_DIR_1" >/dev/null 2>&1
 $GOTO_BIN -r rename_b "$TEST_DIR_2" >/dev/null 2>&1
-set +e
 $GOTO_BIN -R rename_a rename_b >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Rename to existing name fails"
 else
@@ -323,10 +281,7 @@ assert_contains "missing" "$output" "List shows (missing) for broken paths"
 # 22. List with empty config
 SAVED_CONFIG=$(cat "$XDG_CONFIG_HOME/goto/config")
 : > "$XDG_CONFIG_HOME/goto/config"
-set +e
 output=$($GOTO_BIN -l 2>&1)
-rc=$?
-set -e
 assert_contains "No shortcuts" "$output" "List with empty config shows message"
 printf '%s' "$SAVED_CONFIG" > "$XDG_CONFIG_HOME/goto/config"
 
@@ -376,10 +331,8 @@ else
 fi
 
 # 27. Import nonexistent file (should fail)
-set +e
 $GOTO_BIN --import "/nonexistent/file_$$" >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -ne 0 ]; then
     pass "Import nonexistent file fails"
 else
@@ -411,10 +364,8 @@ assert_contains "Usage" "$output" "-h outputs usage information"
 # ════════════════════════════════════════════════════════════════
 
 # 32. No arguments (should fail with usage error)
-set +e
 $GOTO_BIN >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -eq 2 ]; then
     pass "No arguments exits with code 2 (usage error)"
 else
@@ -422,10 +373,8 @@ else
 fi
 
 # 33. Unknown flag (should fail with usage error)
-set +e
 $GOTO_BIN --badoption >/dev/null 2>&1
 rc=$?
-set -e
 if [ "$rc" -eq 2 ]; then
     pass "Unknown flag exits with code 2 (usage error)"
 else

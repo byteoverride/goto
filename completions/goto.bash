@@ -25,6 +25,7 @@ _goto_complete() {
             fi
             ;;
         *)
+            # shellcheck disable=SC2207
             COMPREPLY=( $(cut -d'|' -f1 "$config" | grep -i "^$cur") )
             ;;
     esac

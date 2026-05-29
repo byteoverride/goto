@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # goto shell integration
 # Source this file in your ~/.bashrc or ~/.zshrc:
 #   source /path/to/goto.sh
@@ -36,9 +37,6 @@ if [ -n "$BASH_VERSION" ]; then
                 base=$(grep "^${name}|" "$GOTO_CONFIG_FILE" | head -1 | cut -d'|' -f2-)
                 if [ -n "$base" ] && [ -d "$base" ]; then
                     local prefix="${name}/"
-                    local fullpath="${base}/${subpath}"
-                    local dirpath
-                    dirpath=$(dirname "$fullpath")/
                     COMPREPLY=()
                     local dir
                     for dir in "${base}/${subpath}"*/; do
@@ -50,6 +48,7 @@ if [ -n "$BASH_VERSION" ]; then
                 fi
                 ;;
             *)
+                # shellcheck disable=SC2207
                 COMPREPLY=( $(cut -d'|' -f1 "$GOTO_CONFIG_FILE" | grep -i "^$cur") )
                 ;;
         esac
@@ -57,7 +56,8 @@ if [ -n "$BASH_VERSION" ]; then
     complete -o nospace -F _goto_complete goto
 fi
 
-# Zsh completion
+# Zsh completion (shellcheck cannot parse zsh syntax; skip this block)
+# shellcheck disable=SC2034,SC2154,SC2206,SC2296
 if [ -n "$ZSH_VERSION" ]; then
     _goto_complete() {
         [ -f "$GOTO_CONFIG_FILE" ] || return

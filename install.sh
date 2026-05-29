@@ -3,6 +3,8 @@
 # Installs to ~/.local/bin (user-local install)
 # For system-wide install, use: make install
 
+# shellcheck disable=SC2059
+
 GOTO_SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 BIN_DIR="$HOME/.local/bin"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/goto"
